@@ -50,9 +50,21 @@ uv run train.py
 ```
 prepare.py      — fixed evaluation harness + data download (DO NOT MODIFY)
 train.py        — starter model + training loop (modify this)
+program.md      — agent instructions for autonomous experimentation
+analysis.ipynb  — notebook to visualize experiment results
 pyproject.toml  — dependencies
 README.md       — this file
 ```
+
+## Autonomous experimentation
+
+You can use an AI coding agent (Claude, Codex, etc.) to auto-experiment:
+
+```
+Read program.md and let's kick off a new experiment! Do the setup first.
+```
+
+The agent will loop autonomously — modifying `train.py`, training, evaluating, keeping improvements and discarding regressions. Results are logged to `results.tsv` and can be visualized with `analysis.ipynb`.
 
 ## Codec interface
 
