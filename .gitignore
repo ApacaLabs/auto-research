@@ -8,16 +8,21 @@ wheels/
 
 # Virtual environments
 .venv
-worktrees/
-results/
-queue/
 
-# Agent prompt files (generated per-session by launchers)
+# Agent prompt files
 CLAUDE.md
 AGENTS.md
 
 # Experimental code/artifacts
 dev/
 
-# Results file
+# Data cache
+data/
+
+# Training artifacts
+checkpoint.pt
+run.log
 results.tsv
+
+# UV lock (regenerated)
+# uv.lock
