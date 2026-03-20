@@ -11,21 +11,24 @@ hyperparameters, loss function, quantization method, etc.
 import os
 os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
 
+import csv
 import gc
 import math
 import time
+from datetime import datetime, timezone
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from prepare import IMG_SIZE, IMG_CHANNELS, TIME_BUDGET, make_dataloader, evaluate
+from prepare import IMG_SIZE, IMG_CHANNELS, make_dataloader, evaluate
 
 # ---------------------------------------------------------------------------
 # Hyperparameters (edit these freely)
 # ---------------------------------------------------------------------------
 
 NUM_LATENT_CHANNELS = 16    # latent channels (more = higher rate, better quality)
+TIME_BUDGET = 300              # 5 min per training run
 BATCH_SIZE = 256
 LEARNING_RATE = 1e-3
 WEIGHT_DECAY = 1e-5
@@ -225,3 +228,22 @@ if __name__ == "__main__":
     print(f"training_seconds: {total_training_time:.1f}")
     print(f"peak_vram_mb:     {peak_vram_mb:.1f}")
     print(f"num_params_M:     {num_params / 1e6:.2f}")
+
+    # Log to results.tsv
+    tsv_path = os.path.join(os.path.dirname(__file__) or ".", "results.tsv")
+    header = ["datetime", "score", "psnr", "rate", "memory_gb", "status", "description"]
+    write_header = not os.path.exists(tsv_path)
+    with open(tsv_path, "a", newline="") as f:
+        w = csv.writer(f, delimiter="\t")
+        if write_header:
+            w.writerow(header)
+        w.writerow([
+            datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+            f"{results['score']:.2f}",
+            f"{results['psnr_db']:.2f}",
+            f"{results['rate_bpppc']:.4f}",
+            f"{peak_vram_mb / 1024:.1f}",
+            "",   # status: filled in by agent
+            "",   # description: filled in by agent
+        ])
+    print(f"Logged to {tsv_path}")

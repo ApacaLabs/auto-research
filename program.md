@@ -13,14 +13,14 @@ To set up a new experiment, work with the user to:
    - `prepare.py` — fixed constants, data download, dataloader, evaluation harness. Do not modify.
    - `train.py` — the file you modify. Model architecture, loss function, training loop.
 4. **Verify data exists**: Check that `~/.cache/neural-codec/data/tiny-imagenet-200/` exists. If not, tell the human to run `uv run prepare.py`.
-5. **Initialize results.tsv**: Create `results.tsv` with just the header row. The baseline will be recorded after the first run.
+5. **Results logging**: `results.tsv` is auto-created by `train.py` on the first run. No manual initialization needed.
 6. **Confirm and go**: Confirm setup looks good.
 
 Once you get confirmation, kick off the experimentation.
 
 ## Experimentation
 
-Each experiment runs on a single GPU. The training script runs for a **fixed time budget of 30 minutes** (wall clock training time, excluding startup/compilation). You launch it simply as: `uv run train.py`.
+Each experiment runs on a single GPU. The training script runs for a **fixed time budget of 5 minutes** (wall clock training time, excluding startup/compilation). You launch it simply as: `uv run train.py`.
 
 **What you CAN do:**
 - Modify `train.py` — this is the only file you edit. Everything is fair game: model architecture, loss function, quantization method, training loop, hyperparameters, etc.
@@ -81,28 +81,32 @@ grep "^score:\|^psnr_db:\|^rate_bpppc:" run.log
 
 ## Logging results
 
-When an experiment is done, log it to `results.tsv` (tab-separated, NOT comma-separated — commas break in descriptions).
+Results are logged to `results.tsv` (tab-separated). The core metrics (`datetime`, `score`, `psnr`, `rate`, `memory_gb`) are **auto-logged by `train.py`** at the end of each run. The agent fills in `status` and `description` after deciding whether to keep or discard.
 
-The TSV has a header row and 5 columns:
+The TSV has a header row and 7 columns:
 
 ```
-commit	score	memory_gb	status	description
+datetime	score	psnr	rate	memory_gb	status	description
 ```
 
-1. git commit hash (short, 7 chars)
-2. score achieved (e.g. 42.35) — use 0.00 for crashes
-3. peak memory in GB, round to .1f (e.g. 12.3 — divide peak_vram_mb by 1024) — use 0.0 for crashes
-4. status: `keep`, `discard`, or `crash`
-5. short text description of what this experiment tried
+1. datetime (UTC, auto-logged by train.py)
+2. score achieved (auto-logged)
+3. PSNR in dB (auto-logged)
+4. rate in bpppc (auto-logged)
+5. peak memory in GB (auto-logged)
+6. status: `keep`, `discard`, or `crash` (filled in by agent)
+7. short text description of what this experiment tried (filled in by agent)
+
+After each run, update the last row's `status` and `description` fields. For crashes (where train.py didn't complete), manually append a row with score=0.00, psnr=0.00, rate=0.0000, memory_gb=0.0.
 
 Example:
 
 ```
-commit	score	memory_gb	status	description
-a1b2c3d	38.50	8.2	keep	baseline
-b2c3d4e	40.10	8.4	keep	add rate penalty to loss
-c3d4e5f	37.20	8.2	discard	switch to VQ (rate too high)
-d4e5f6g	0.00	0.0	crash	attention in bottleneck (OOM)
+datetime	score	psnr	rate	memory_gb	status	description
+2026-03-20 14:00:00	38.50	28.30	0.2500	8.2	keep	baseline
+2026-03-20 14:35:00	40.10	29.10	0.2100	8.4	keep	add rate penalty to loss
+2026-03-20 15:10:00	37.20	27.80	0.3200	8.2	discard	switch to VQ (rate too high)
+2026-03-20 15:45:00	0.00	0.00	0.0000	0.0	crash	attention in bottleneck (OOM)
 ```
 
 ## The experiment loop

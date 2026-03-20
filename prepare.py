@@ -30,7 +30,6 @@ from PIL import Image
 
 IMG_SIZE = 64
 IMG_CHANNELS = 3
-TIME_BUDGET = 1800              # 30 min per training run
 SCORE_WEIGHT = 5.0              # w in score = PSNR + w * log2(1/rate)
 
 # ---------------------------------------------------------------------------
